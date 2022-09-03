@@ -1,0 +1,2 @@
+class ChangeLogFetchException(Exception):
+    pass

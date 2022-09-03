@@ -1,1 +1,1 @@
-mysql-connector-python==8.0.30
+git+https://github.com/stevekineeve88/mysql_data_manager_library@VERSION-0.0.1#egg=mysql-data-manager

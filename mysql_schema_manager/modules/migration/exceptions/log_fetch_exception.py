@@ -1,2 +1,0 @@
-class LogFetchException(Exception):
-    pass
