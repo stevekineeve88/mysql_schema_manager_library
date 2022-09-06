@@ -1,1 +1,3 @@
 git+https://github.com/stevekineeve88/mysql_data_manager_library@VERSION-0.0.1#egg=mysql-data-manager
+mysql-connector-python==8.0.30
+python-dotenv==0.21.0

@@ -1,3 +1,4 @@
+import os
 import unittest
 from datetime import datetime
 from unittest.mock import patch, MagicMock, Mock
@@ -25,6 +26,7 @@ class MigrationManagerTest(unittest.TestCase):
             change_log_manager=self.change_log_manager,
             root_directory=self.root_directory
         )
+        self.created_files = []
 
     def test_run_returns_true_result(self):
         self.migration_data.create_schema_change_log_table = MagicMock(return_value=Result(True))
@@ -53,8 +55,8 @@ class MigrationManagerTest(unittest.TestCase):
 
         self.migration_manager.run()
 
-        self.assertEqual(1, self.migration_data.run_file.call_count)
-        self.assertEqual(1, self.change_log_manager.create.call_count)
+        self.migration_data.run_file.assert_called_once_with(f"{self.root_directory}/scripts/test2.sql")
+        self.change_log_manager.create.assert_called_once_with("test2.sql")
 
     def test_run_fails_on_schema_change_log_creation_error(self):
         self.migration_data.create_schema_change_log_table = MagicMock(return_value=Result(False))
@@ -88,3 +90,20 @@ class MigrationManagerTest(unittest.TestCase):
         self.assertEqual(f"Error in test2.sql: {failure_message}", result.get_message())
         self.assertEqual("test1.sql", result.get_change_logs()[0].get_file_name())
         self.assertEqual(1, self.change_log_manager.create.call_count)
+
+    def test_generate_file_generates_sql_file_with_datetime(self):
+        file_name = self.__generate_file()
+        with open(f"{self.root_directory}/scripts/{file_name}", "r") as file:
+            lines = file.readlines()
+            self.assertEqual(1, len(lines))
+            self.assertEqual(f"-- Generated SQL file - {file_name.split('.')[0]}", lines[0])
+
+    def tearDown(self) -> None:
+        for created_file in self.created_files:
+            os.remove(f"{self.root_directory}/scripts/{created_file}")
+
+    def __generate_file(self) -> str:
+        file_name = self.migration_manager.generate_file()
+        self.created_files.append(file_name)
+        return file_name
+

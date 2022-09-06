@@ -1,3 +1,4 @@
+from typing import List
 from mysql_data_manager.modules.connection.managers.connection_manager import ConnectionManager
 from mysql_data_manager.modules.connection.objects.result import Result
 
@@ -18,5 +19,5 @@ class MigrationData:
 
     def run_file(self, file_name: str) -> Result:
         with open(file_name, 'r') as file:
-            cmd: str = file.read().strip()
-            return self.__connection_manager.query(cmd)
+            commands: List[str] = file.read().strip().split(";")
+            return self.__connection_manager.query_list(commands)

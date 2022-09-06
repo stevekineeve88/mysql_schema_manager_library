@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from os.path import isfile, join
 from typing import List
 from mysql_schema_manager.modules.migration.data.migration_data import MigrationData
@@ -35,3 +36,9 @@ class MigrationManager:
             completed.append(self.__change_log_manager.create(script))
         return MigrationResult(True, "", completed)
 
+    def generate_file(self) -> str:
+        current_timestamp = datetime.now().strftime("%Y%d%m-%H%M%S")
+        generated_file = f"{current_timestamp}.sql"
+        with open(f"{self.__script_directory}/{generated_file}", "x") as file:
+            file.write(f"-- Generated SQL file - {current_timestamp}")
+        return generated_file
