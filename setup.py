@@ -15,7 +15,7 @@ setuptools.setup(
     url="https://github.com/stevekineeve88/mysql_schema_manager_library.git",
     packages=setuptools.find_packages(),
     install_requires=[
-        "git+https://github.com/stevekineeve88/mysql_data_manager_library@VERSION-0.0.1"
+        "mysql-data-manager @ git+https://github.com/stevekineeve88/mysql_data_manager_library@VERSION-0.0.1#egg=mysql-data-manager"
     ],
     python_requires='>=3.7'
 )
