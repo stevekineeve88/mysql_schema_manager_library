@@ -11,13 +11,26 @@ from mysql_schema_manager.modules.migration.objects.migration_result import Migr
 
 
 class MigrationManager:
+    """ Manager for migration operations
+    """
     def __init__(self, **kwargs):
+        """ Constructor for MigrationManager
+        Args:
+            **kwargs:   Dependencies
+                migration_data (MigrationData) - Migration data layer
+                change_log_manager (ChangeLogManager) - Change log object manager
+                root_directory (str) - [OPTIONAL] root directory of scripts folder
+        """
         self.__migration_data: MigrationData = kwargs.get("migration_data")
         self.__change_log_manager: ChangeLogManager = kwargs.get("change_log_manager")
         self.__root_directory: str = kwargs.get("root_directory") or os.environ["DB_MIGRATION_ROOT_DIR"]
         self.__script_directory: str = f"{self.__root_directory}/scripts"
 
     def run(self) -> MigrationResult:
+        """ Run migration scripts
+        Returns:
+            MigrationResult
+        """
         result = self.__migration_data.create_schema_change_log_table()
         if not result.get_status():
             raise ChangeLogTableCreationException(result.get_message())
@@ -37,6 +50,10 @@ class MigrationManager:
         return MigrationResult(True, "", completed)
 
     def generate_file(self) -> str:
+        """ Generate SQL script file in <ROOT>/scripts directory
+        Returns:
+            str
+        """
         current_timestamp = datetime.now().strftime("%Y%d%m-%H%M%S")
         generated_file = f"{current_timestamp}.sql"
         with open(f"{self.__script_directory}/{generated_file}", "x") as file:
