@@ -1,0 +1,2 @@
+git+https://github.com/stevekineeve88/mysql_data_manager_library@v0.0.1-alpha#egg=mysql-data-manager
+python-dotenv==0.21.0

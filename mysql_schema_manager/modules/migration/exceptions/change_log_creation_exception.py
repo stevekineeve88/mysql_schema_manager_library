@@ -1,0 +1,2 @@
+class ChangeLogCreationException(Exception):
+    pass

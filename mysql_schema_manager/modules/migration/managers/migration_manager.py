@@ -1,0 +1,61 @@
+import os
+from datetime import datetime
+from os.path import isfile, join
+from typing import List
+from mysql_schema_manager.modules.migration.data.migration_data import MigrationData
+from mysql_schema_manager.modules.migration.exceptions.change_log_table_creation_exception import \
+    ChangeLogTableCreationException
+from mysql_schema_manager.modules.migration.managers.change_log_manager import ChangeLogManager
+from mysql_schema_manager.modules.migration.objects.change_log import ChangeLog
+from mysql_schema_manager.modules.migration.objects.migration_result import MigrationResult
+
+
+class MigrationManager:
+    """ Manager for migration operations
+    """
+    def __init__(self, **kwargs):
+        """ Constructor for MigrationManager
+        Args:
+            **kwargs:   Dependencies
+                migration_data (MigrationData) - Migration data layer
+                change_log_manager (ChangeLogManager) - Change log object manager
+                root_directory (str) - [OPTIONAL] root directory of scripts folder
+        """
+        self.__migration_data: MigrationData = kwargs.get("migration_data")
+        self.__change_log_manager: ChangeLogManager = kwargs.get("change_log_manager")
+        self.__root_directory: str = kwargs.get("root_directory") or os.environ["DB_MIGRATION_ROOT_DIR"]
+        self.__script_directory: str = f"{self.__root_directory}/scripts"
+
+    def run(self) -> MigrationResult:
+        """ Run migration scripts
+        Returns:
+            MigrationResult
+        """
+        result = self.__migration_data.create_schema_change_log_table()
+        if not result.get_status():
+            raise ChangeLogTableCreationException(result.get_message())
+
+        logs = self.__change_log_manager.get_all()
+        scripts = sorted([f for f in os.listdir(self.__script_directory) if isfile(join(self.__script_directory, f))])
+
+        used_scripts = [log.get_file_name() for log in logs]
+        unused_scripts = sorted(list(set(scripts) - set(used_scripts)))
+
+        completed: List[ChangeLog] = []
+        for script in unused_scripts:
+            result = self.__migration_data.run_file(f"{self.__script_directory}/{script}")
+            if not result.get_status():
+                return MigrationResult(False, f"Error in {script}: {result.get_message()}", completed)
+            completed.append(self.__change_log_manager.create(script))
+        return MigrationResult(True, "", completed)
+
+    def generate_file(self) -> str:
+        """ Generate SQL script file in <ROOT>/scripts directory
+        Returns:
+            str
+        """
+        current_timestamp = datetime.now().strftime("%Y%d%m-%H%M%S")
+        generated_file = f"{current_timestamp}.sql"
+        with open(f"{self.__script_directory}/{generated_file}", "x") as file:
+            file.write(f"-- Generated SQL file - {current_timestamp}")
+        return generated_file
